@@ -43,6 +43,84 @@ Mob(
  size: ..,  // Is this part of the model?
 
 
+How do we associate behaviors with Models?
+Can behaviors run at different layers?
+
+X Tank:
+* Model of Tank
+* Just a normal Mob with Id?
+X Steering behavior:
+* Applied to Tank, as behavior, consumed on input before physics?
+X Collision behavior:
+* Applied to Tank
+X Firing behavior
+* Applied to tank, as behavior, consuemd on input before model?
+X Pilbox behavior
+* Applied to Pillbox, as behavior, before model?
+Visuals of Tank
+* Sprite applied to Tank
+Animation of Tank
+* Animation applied to Tank?
+X Death of pillbox?
+* Value trigger based on named model value?
+Dead pillbox vs. alive one?
+* Different model object on vs other?
+X Health points of tank?
+* named model value?
+X Death of tank?
+* Value triggers based on named model values?
+X Slowdown due to terrain?
+* Behaviors run every step to set max speed based on terrain?
+X Refill stations?
+* Collision triggers which cause model changes?
+X Visibility changes from brush?
+* Triggers which change visibility model?
+* Or recomputing every step? e.g. Visiblility update pass? (custom phase?)
+
+
+class HealthData extends CustomData {
+    double health;
+}
+
+World(
+    customPhases: [
+        VisibilityPhase(), // post physics
+        DamagePhase(), // post physics
+        MaxSpeedFromTerrain(), // pre-input?
+        HealFromTerrain(), // post-physics?
+    ]
+    models:[
+    Mob(
+        id: 'tank',
+        children: [
+            SteeringBehavior(
+                angleSpeed: 1,
+            ),
+            InputTrigger(triggers: input.action1,
+                behavior: ProjectileBehavior(create: () => Bullet(), cooldown: 0.5),
+            )
+            CollisionRadius(behavior: HardBodyCollision()),
+            HealthData(),
+            EventTrigger('ondeath', (model) => model.withAnimationVariant('dead')),
+        }
+        size: 0.5,
+    ),
+    Mob(
+        id: 'pillbox'
+        physicsBehaviors: [
+            LineOfSightTrigger(result: ProjectileBehavior),
+        ],
+        customData: HealthData(),
+    ),
+    Mob(
+        id: 'refillstation'
+    )
+])
+
+
+Important to have diagnostics?  e.g. be able to list all the phases?
+
+
 
 Game(
     model: Model([
