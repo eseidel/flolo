@@ -4,14 +4,82 @@ void main() {
   runApp(const FloloApp());
 }
 
-class MOB {
-  final String name;
-  final Offset offset;
-  final Offset velocity;
-
-  const MOB(
-      {required this.name, required this.offset, this.velocity = Offset.zero});
+class Projectile {
+  
 }
+
+class ProjectileBehavior {
+    void onTrigger(world) =>
+        world.byAddingModel(Projectile());
+}
+
+class World {
+}
+
+class GameObject {
+
+}
+
+// Stateful?
+class Mob : {
+  String id;
+  Transform transform;
+  List<
+}
+
+Object build() {
+
+// These are all descriptions which get turned into GameObjects/Elements?
+return World(
+    // extraPhases: [
+    //     VisibilityPhase(), // post physics
+    //     DamagePhase(), // post physics
+    //     MaxSpeedFromTerrain(), // pre-input?
+    //     HealFromTerrain(), // post-physics?
+    // ]
+    models:[
+    Mob(
+        id: 'tank',
+        transform: Transform.offset(0,1), // initial state?
+        children: [
+            SteeringBehavior(
+                angleSpeed: 1,
+            ),
+            InputTrigger(triggers: input.action1,
+                behavior: ProjectileBehavior(create: () => Bullet(), cooldown: 0.5),
+            )
+            CollisionRadius(behavior: HardBodyCollision()),
+            HealthData(), // stateful
+            EventTrigger('ondeath', (model) => model.withAnimationVariant('dead')),
+        }
+    ),
+    Mob(
+        id: 'pillbox'
+        physicsBehaviors: [
+            LineOfSightTrigger(result: ProjectileBehavior),
+        ],
+        customData: HealthData(),
+    ),
+    Mob(
+        id: 'refillstation'
+    )
+]);
+}
+
+void loop() {
+  // Collect which phases to run?
+  // Run each phase.
+  // Show output.
+}
+
+// class MOB {
+//   final String name;
+//   final Offset offset;
+//   final Offset velocity;
+
+//   const MOB(
+//       {required this.name, required this.offset, this.velocity = Offset.zero});
+// }
 
 class State {}
 

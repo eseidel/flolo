@@ -5,7 +5,21 @@ Playing with functional reactive gaming ideas.  Inspired by Bolo from the 80s.
 
 # Notes
 
+Are games just inherently stateful?
+Do you rebuild the model every tick?
+Is traversing through levels just represented as transforms on the model?
+Can you change the phases? Presumably only through rebuilding the root?
+
+
+Simple is fast.k
 Pipeline
+* Input
+* Animation // Is this "behavior"?  Is this run on the server?
+* Build
+* Layout // Is this basically physics?
+* Paint
+* Composite
+* Rasterize
 * Model (a tree of state)?
  * How many dimensions?
   * Transform
@@ -78,8 +92,15 @@ X Visibility changes from brush?
 * Or recomputing every step? e.g. Visiblility update pass? (custom phase?)
 
 
+// Why is this separate?  Does this need to be a class?
+// Is this just another child object?
 class HealthData extends CustomData {
     double health;
+}
+
+class ProjectileBehavior {
+    void onTrigger(world) =>
+        world.byAddingModel(Projectile());
 }
 
 World(
@@ -92,6 +113,7 @@ World(
     models:[
     Mob(
         id: 'tank',
+        transform: Transform.offset(0,1),
         children: [
             SteeringBehavior(
                 angleSpeed: 1,
@@ -103,14 +125,13 @@ World(
             HealthData(),
             EventTrigger('ondeath', (model) => model.withAnimationVariant('dead')),
         }
-        size: 0.5,
     ),
     Mob(
         id: 'pillbox'
-        physicsBehaviors: [
+        children: [
             LineOfSightTrigger(result: ProjectileBehavior),
+            HealthData(),
         ],
-        customData: HealthData(),
     ),
     Mob(
         id: 'refillstation'
