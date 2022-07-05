@@ -1,7 +1,33 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-late ui.Color color;
+import 'package:flolo/game_framework.dart';
+
+ui.Color color = const ui.Color(0xFF00FF00);
+
+class GameBinding {
+  GameBuildOwner buildOwner = GameBuildOwner();
+  GamePipelineOwner pipelineOwner = GamePipelineOwner();
+
+  void beginFrame(Duration timeStamp) {
+    // Input
+    // Transitory, per-frame callbacks (e.g. animation?)
+    // Build
+    buildOwner.build();
+    // Physics
+    pipelineOwner.tickPhysics();
+    pipelineOwner.flushRender();
+    // Behaviors (shooting pillboxes, etc.)
+  }
+
+  void drawFrame() {
+    final ui.Rect paintBounds =
+        ui.Offset.zero & (ui.window.physicalSize / ui.window.devicePixelRatio);
+    final ui.Picture picture = paint(paintBounds);
+    final ui.Scene scene = composite(picture, paintBounds);
+    ui.window.render(scene);
+  }
+}
 
 ui.Picture paint(ui.Rect paintBounds) {
   final ui.PictureRecorder recorder = ui.PictureRecorder();
@@ -38,22 +64,6 @@ ui.Scene composite(ui.Picture picture, ui.Rect paintBounds) {
   return sceneBuilder.build();
 }
 
-void beginFrame(Duration timeStamp) {
-  // Input
-  // Transitory, per-frame callbacks (e.g. animation?)
-  // Build
-  // Physics
-  // Behaviors (shooting pillboxes, etc.)
-}
-
-void drawFrame() {
-  final ui.Rect paintBounds =
-      ui.Offset.zero & (ui.window.physicalSize / ui.window.devicePixelRatio);
-  final ui.Picture picture = paint(paintBounds);
-  final ui.Scene scene = composite(picture, paintBounds);
-  ui.window.render(scene);
-}
-
 // void handlePointerDataPacket(ui.PointerDataPacket packet) {
 //   for (final ui.PointerData datum in packet.data) {
 //     if (datum.change == ui.PointerChange.down) {
@@ -80,11 +90,11 @@ bool handleKeyData(ui.KeyData datum) {
 }
 
 void main() {
-  color = const ui.Color(0xFF00FF00);
-  ui.PlatformDispatcher.instance.onBeginFrame = beginFrame;
-  ui.PlatformDispatcher.instance.onDrawFrame = drawFrame;
+  GameBinding binding = GameBinding();
 
   // ui.PlatformDispatcher.instance.onPointerDataPacket = handlePointerDataPacket;
+  ui.PlatformDispatcher.instance.onBeginFrame = binding.beginFrame;
+  ui.PlatformDispatcher.instance.onDrawFrame = binding.drawFrame;
   ui.PlatformDispatcher.instance.onKeyData = handleKeyData;
 
   // kick off a frame

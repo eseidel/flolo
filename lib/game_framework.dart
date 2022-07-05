@@ -1,6 +1,17 @@
 import 'package:meta/meta.dart';
 import 'dart:ui' as ui;
 
+class GameBuildOwner {
+  final List<GameElement> _dirtyElements = [];
+
+  void build() {}
+}
+
+class GamePipelineOwner {
+  void tickPhysics() {}
+  void flushRender() {}
+}
+
 // Widgets are configurations which know how to create Elements.
 abstract class GameWidget {
   final GameKey? key;
