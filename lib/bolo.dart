@@ -11,21 +11,26 @@ class World {}
 
 // Scene
 
-class GameScene extends GameStatelessWidget {
-  // renders in order?
-}
-
 class CircleRenderObject extends GameRenderObject {
+  ui.Offset position = ui.Offset.zero;
+
+  @override
+  void setPosition(ui.Offset position) {
+    this.position = position;
+  }
+
   @override
   void render(GameRenderContext context) {
-    var _paint = ui.Paint()..color = ui.Color.fromARGB(255, 0, 255, 0);
-    context.canvas.drawCircle(ui.Offset.zero, 10.0, _paint);
+    var circlePaint = ui.Paint()
+      ..color = const ui.Color.fromARGB(255, 0, 255, 0);
+    context.canvas.drawCircle(ui.Offset.zero, 10.0, circlePaint);
   }
 }
 
-class CircleWidget extends GameRenderObjectWidget {
+class CircleWidget extends GameLeafRenderObjectWidget {
   @override
-  GameRenderObject createRenderObject() => CircleRenderObject();
+  GameRenderObject createRenderObject(GameBuildContext context) =>
+      CircleRenderObject();
 }
 
 class TankState extends GameState<Tank> {
@@ -40,12 +45,22 @@ class Tank extends GameStatefulWidget {
   TankState createState() => TankState();
 }
 
-class Pillbox extends GameStatefulWidget {}
+class PillboxState extends GameState<Pillbox> {
+  @override
+  GameWidget build(GameBuildContext context) {
+    return CircleWidget();
+  }
+}
+
+class Pillbox extends GameStatefulWidget {
+  @override
+  PillboxState createState() => PillboxState();
+}
 
 class Bolo extends GameStatelessWidget {
   @override
   GameWidget build(GameBuildContext context) {
-    return GameScene(children: [
+    return GameStack(children: [
       Tank(),
       Pillbox(),
     ]);

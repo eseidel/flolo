@@ -1,50 +1,92 @@
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+late ui.Color color;
+
+ui.Picture paint(ui.Rect paintBounds) {
+  final ui.PictureRecorder recorder = ui.PictureRecorder();
+  final ui.Canvas canvas = ui.Canvas(recorder, paintBounds);
+
+  final ui.Size size = paintBounds.size;
+  canvas.drawCircle(
+    size.center(ui.Offset.zero),
+    size.shortestSide * 0.45,
+    ui.Paint()..color = color,
+  );
+  return recorder.endRecording();
+}
+
+ui.Scene composite(ui.Picture picture, ui.Rect paintBounds) {
+  final double devicePixelRatio = ui.window.devicePixelRatio;
+
+  // This transform scales the x and y coordinates by the devicePixelRatio.
+  final Float64List deviceTransform = Float64List(16)
+    ..[0] = devicePixelRatio
+    ..[5] = devicePixelRatio
+    ..[10] = 1.0
+    ..[15] = 1.0;
+
+  // We build a very simple scene graph with two nodes. The root node is a
+  // transform that scale its children by the device pixel ratio. This transform
+  // lets us paint in "logical" pixels which are converted to device pixels by
+  // this scaling operation.
+  final ui.SceneBuilder sceneBuilder = ui.SceneBuilder()
+    ..pushTransform(deviceTransform)
+    ..addPicture(ui.Offset.zero, picture)
+    ..pop();
+
+  return sceneBuilder.build();
+}
+
+void beginFrame(Duration timeStamp) {
+  // Input
+  // Transitory, per-frame callbacks (e.g. animation?)
+  // Build
+  // Physics
+  // Behaviors (shooting pillboxes, etc.)
+}
+
+void drawFrame() {
+  final ui.Rect paintBounds =
+      ui.Offset.zero & (ui.window.physicalSize / ui.window.devicePixelRatio);
+  final ui.Picture picture = paint(paintBounds);
+  final ui.Scene scene = composite(picture, paintBounds);
+  ui.window.render(scene);
+}
+
+// void handlePointerDataPacket(ui.PointerDataPacket packet) {
+//   for (final ui.PointerData datum in packet.data) {
+//     if (datum.change == ui.PointerChange.down) {
+//       // If the pointer went down, we change the color of the circle to blue.
+//       color = const ui.Color(0xFF0000FF);
+//       ui.window.scheduleFrame();
+//     } else if (datum.change == ui.PointerChange.up) {
+//       color = const ui.Color(0xFF00FF00);
+//       ui.PlatformDispatcher.instance.scheduleFrame();
+//     }
+//   }
+// }
+
+bool handleKeyData(ui.KeyData datum) {
+  if (datum.type == ui.KeyEventType.down) {
+    // If the key went down, we change the color of the circle to blue.
+    color = const ui.Color(0xFF0000FF);
+    ui.window.scheduleFrame();
+  } else if (datum.type == ui.KeyEventType.up) {
+    color = const ui.Color(0xFF00FF00);
+    ui.PlatformDispatcher.instance.scheduleFrame();
+  }
+  return true; // Handled.
+}
 
 void main() {
-  runApp(const FloloApp());
-}
+  color = const ui.Color(0xFF00FF00);
+  ui.PlatformDispatcher.instance.onBeginFrame = beginFrame;
+  ui.PlatformDispatcher.instance.onDrawFrame = drawFrame;
 
-class FloloApp extends StatelessWidget {
-  const FloloApp({Key? key}) : super(key: key);
+  // ui.PlatformDispatcher.instance.onPointerDataPacket = handlePointerDataPacket;
+  ui.PlatformDispatcher.instance.onKeyData = handleKeyData;
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flolo',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const FloloHome(),
-    );
-  }
-}
-
-class FloloHome extends StatefulWidget {
-  const FloloHome({super.key});
-
-  @override
-  State<FloloHome> createState() => _FloloHomeState();
-}
-
-class _FloloHomeState extends State<FloloHome> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-          child: CustomPaint(
-        painter: FloloPainter(),
-      )),
-    );
-  }
-}
-
-class FloloPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    var paint = Paint()..color = Colors.green;
-    canvas.drawCircle(const Offset(100, 100), 10, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
+  // kick off a frame
+  ui.PlatformDispatcher.instance.scheduleFrame();
 }

@@ -10,14 +10,19 @@ Do you rebuild the model every tick?
 Is traversing through levels just represented as transforms on the model?
 Can you change the phases? Presumably only through rebuilding the root?
 
+Questions:
+* How does drag/drop work in Flutter?  An animation?
 
-Simple is fast.k
+
+Simple is fast.
 Pipeline
-* Input
-* Animation // Is this "behavior"?  Is this run on the server?
-* Build
-* Layout // Is this basically physics?
-* Paint
+* Input (hit testing)
+* Animation (transitory per-frame callbacks?)
+* Build -- produces the GameObject tree and Behaviors
+* Physics (or layout) -- adjusts GameObjects, collisions, etc.
+* Behaviors
+* Animation -- Sets renderers to right phases/times?
+* Render -- Clips to camera, masks for layers
 * Composite
 * Rasterize
 * Model (a tree of state)?
@@ -64,13 +69,16 @@ X Tank:
 * Model of Tank
 * Just a normal Mob with Id?
 X Steering behavior:
-* Applied to Tank, as behavior, consumed on input before physics?
+* Acceleration is applied as an animation while button is down.
 X Collision behavior:
+* Collisions are reported as events?
 * Applied to Tank
 X Firing behavior
 * Applied to tank, as behavior, consuemd on input before model?
+* Inputs are triggered with delay behavior?
 X Pilbox behavior
 * Applied to Pillbox, as behavior, before model?
+* Visibiliy is reported to pillbox behavior.
 Visuals of Tank
 * Sprite applied to Tank
 Animation of Tank
@@ -81,10 +89,12 @@ Dead pillbox vs. alive one?
 * Different model object on vs other?
 X Health points of tank?
 * named model value?
+* State on tank.
 X Death of tank?
 * Value triggers based on named model values?
 X Slowdown due to terrain?
 * Behaviors run every step to set max speed based on terrain?
+* Could be a collision with terrain cell?
 X Refill stations?
 * Collision triggers which cause model changes?
 X Visibility changes from brush?

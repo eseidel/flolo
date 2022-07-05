@@ -3,6 +3,9 @@ import 'dart:ui' as ui;
 
 // Widgets are configurations which know how to create Elements.
 abstract class GameWidget {
+  final GameKey? key;
+  const GameWidget({this.key});
+
   GameElement createElement();
 }
 
@@ -34,20 +37,70 @@ abstract class GameComponentElement extends GameElement {
 
 class GameBuildContext {}
 
+// Unclear if needed?
+class GameKey {}
+
 class GameRenderContext {
-  ui.Canvas canvas;
+  final ui.Canvas canvas;
+
+  GameRenderContext(this.canvas);
+
+  void renderChild(GameRenderObject child) {
+    child.render(this);
+  }
 }
 
 abstract class GameRenderObject {
   // FIXME: This should be 3d.
-  void position(ui.Offset position);
+  // FIXME: is this parent data?
+  void setPosition(ui.Offset position);
 
   @protected
   void render(GameRenderContext context);
 }
 
+abstract class GameLeafRenderObjectWidget extends GameRenderObjectWidget {
+  const GameLeafRenderObjectWidget();
+
+  @override
+  GameLeafRenderObjectElement createElement() =>
+      GameLeafRenderObjectElement(this);
+}
+
+class GameLeafRenderObjectElement extends GameRenderObjectElement {
+  GameLeafRenderObjectElement(GameLeafRenderObjectWidget widget)
+      : super(widget);
+}
+
+abstract class GameMultiChildRenderObjectWidget extends GameRenderObjectWidget {
+  const GameMultiChildRenderObjectWidget(
+      {super.key, this.children = const <GameWidget>[]});
+
+  final List<GameWidget> children;
+
+  @override
+  GameMultiChildRenderObjectElement createElement() =>
+      GameMultiChildRenderObjectElement(this);
+}
+
+class GameMultiChildRenderObjectElement extends GameRenderObjectElement {
+  GameMultiChildRenderObjectElement(super.widget);
+}
+
 abstract class GameRenderObjectWidget extends GameWidget {
-  GameRenderObject createRenderObject();
+  const GameRenderObjectWidget({super.key});
+
+  @override
+  @factory
+  GameRenderObjectElement createElement();
+
+  @protected
+  @factory
+  GameRenderObject createRenderObject(GameBuildContext context);
+
+  @protected
+  void updateRenderObject(
+      GameBuildContext context, covariant GameRenderObject renderObject) {}
 }
 
 class GameRenderObjectElement extends GameElement {
@@ -81,6 +134,8 @@ class GameStatefulElement extends GameComponentElement {
 }
 
 abstract class GameStatelessWidget extends GameWidget {
+  const GameStatelessWidget({super.key});
+
   @protected
   GameWidget build(GameBuildContext context);
 
@@ -95,4 +150,32 @@ abstract class GameStatefulWidget extends GameWidget {
   @protected
   @factory
   GameState createState();
+}
+
+class GameStack extends GameMultiChildRenderObjectWidget {
+  const GameStack({super.children});
+
+  @override
+  GameRenderObject createRenderObject(GameBuildContext context) {
+    return GameRenderStack();
+  }
+
+  // renders in order?
+}
+
+class GameRenderStack extends GameRenderObject {
+  List<GameRenderObject> children = <GameRenderObject>[];
+
+  GameRenderStack({children = const <GameRenderObject>[]});
+
+  @override
+  void setPosition(ui.Offset position) {}
+
+  @override
+  @protected
+  void render(GameRenderContext context) {
+    for (var child in children) {
+      context.renderChild(child);
+    }
+  }
 }
