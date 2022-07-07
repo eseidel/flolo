@@ -1,15 +1,26 @@
 import 'dart:ui' as ui;
 import 'game_framework.dart';
 
-class Projectile {}
-
-class ProjectileBehavior {
-  void onTrigger(world) => world.byAddingModel(Projectile());
-}
-
-class World {}
+class ProjectileBehavior {}
 
 // Scene
+
+class RigidBodyWidget extends GameWidget {
+  final double mass;
+  final double maxSpeed;
+  final List<GameWidget> children;
+
+  const RigidBodyWidget({
+    this.mass = 1.0,
+    this.maxSpeed = 1.0,
+    this.children = const [],
+  });
+
+  @override
+  GameElement createElement() {
+    return GameMultiChildRenderObjectElement(this);
+  }
+}
 
 class CircleRenderObject extends GameRenderObject {
   ui.Offset position = ui.Offset.zero;
@@ -33,10 +44,81 @@ class CircleWidget extends GameLeafRenderObjectWidget {
       CircleRenderObject();
 }
 
+class GameInputManager {
+  static GameInputManager _instance = GameInputManager();
+
+  // FIXME: Cheating for now.
+  static GameInputManager of(GameBuildContext context) {
+    return _instance;
+  }
+
+  double get leftRight => 0.0;
+  double get upDown => 0.0;
+}
+
+class GamePhysicsChange {
+  final double angularAcceleration;
+  final double linearAcceleration;
+
+  GamePhysicsChange({
+    this.angularAcceleration = 0.0,
+    this.linearAcceleration = 0.0,
+  });
+}
+
+class GamePhysicsBehavior {}
+
+class EitherOrSteeringBehavior extends GamePhysicsBehavior {
+  double angularAcceleration;
+  double linearAcceleration;
+
+  EitherOrSteeringBehavior({
+    required this.angularAcceleration,
+    required this.linearAcceleration,
+  });
+
+  GamePhysicsChange onTick(GameBuildContext context) {
+    var input = GameInputManager.of(context);
+    return GamePhysicsChange(
+      angularAcceleration: input.leftRight * angularAcceleration,
+      linearAcceleration: input.upDown * linearAcceleration,
+    );
+  }
+}
+
 class TankState extends GameState<Tank> {
+  double maxSpeed = 10;
+
   @override
   GameWidget build(GameBuildContext context) {
-    return CircleWidget();
+    return RigidBodyWidget(
+      // mass: 1,
+      // maxSpeed: maxSpeed,
+      // maxAngularSpeed: 1.0,
+      behaviors: [
+        // if left is down, apply left steering force.
+        // if right is down apply right steering force.
+        // if neither or both are down, apply zero steering force.
+
+        // if back is down apply backwards/braking force.
+        // if forward is down apply acceleration.
+        // if neither or both are down, apply zero acceleration.
+        EitherOrSteeringBehavior(
+          angularAcceleration: 0.1,
+          linearAcceleration: 0.1,
+        ),
+
+        // if fire is down, and not on cooldown, fire a projectile.
+        // ProjectileBehavior(create: () => Bullet(), cooldown: 0.5),
+
+        // OnPositionChanged((position) {
+        //   setState(() {
+        //     maxSpeed = Map.cellAtPosition(position).terrain.maxSpeed;
+        //   })
+        // }),
+        // How does this get rendered?
+      ],
+    );
   }
 }
 
@@ -67,16 +149,6 @@ class Bolo extends GameStatelessWidget {
   }
 }
 
-// Stateful?
-// class Mob : {
-//   String id;
-//   Transform transform;
-//   List<
-// }
-
-// Object build() {
-
-// // These are all descriptions which get turned into GameObjects/Elements?
 // return World(
 //     // extraPhases: [
 //     //     VisibilityPhase(), // post physics
@@ -113,23 +185,8 @@ class Bolo extends GameStatelessWidget {
 // ]);
 // }
 
-void loop() {
-  // Collect which phases to run?
-  // Run each phase.
-  // Show output.
-}
-
-// class MOB {
-//   final String name;
-//   final Offset offset;
-//   final Offset velocity;
-
-//   const MOB(
-//       {required this.name, required this.offset, this.velocity = Offset.zero});
-// }
 
 // These take in states and queue transforms.
-class Behavior {}
 
 // class Model {
 //   State currentState = State();
